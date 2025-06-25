@@ -1,6 +1,5 @@
 import sys
-from fastmcp import FastMCP
-from flask import Flask, request, redirect, session, jsonify
+from flask import Flask, request, redirect, session, jsonify, Response
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -16,9 +15,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
-# Initialize FastMCP
-mcp = FastMCP("Demo")
 
 CLIENT_SECRETS = "credentials.json"
 SCOPES = [
