@@ -58,14 +58,9 @@ def start_google_auth():
         print(state)
         print(auth_url)
         
-        # Store flow data in session
+        # Store minimal session data
         session['oauth_state'] = state
         session['user_id'] = user_id
-        session['flow_data'] = {
-            'client_config': flow.client_config,
-            'scopes': SCOPES,
-            'redirect_uri': REDIRECT_URI
-        }
         
         return redirect(auth_url)
     except Exception as e:
@@ -79,18 +74,14 @@ def google_callback():
             return "Invalid session state", 400
         
         user_id = session.get('user_id', 'default_user')
-        flow_data = session.get('flow_data')
         
-        if not flow_data:
-            return "Missing flow data", 400
-        
-        # Recreate flow
-        flow = Flow.from_client_config(
-            flow_data['client_config'],
-            scopes=flow_data['scopes'],
+        # Recreate flow using the same method as initial creation
+        flow = Flow.from_client_secrets_file(
+            CLIENT_SECRETS,
+            scopes=SCOPES,
+            redirect_uri=REDIRECT_URI,
             state=session['oauth_state']
         )
-        flow.redirect_uri = flow_data['redirect_uri']
         
         # Fetch token
         authorization_response = request.url
@@ -103,7 +94,6 @@ def google_callback():
         # Clear session
         session.pop('oauth_state', None)
         session.pop('user_id', None)
-        session.pop('flow_data', None)
         
         return '''
         <html>
