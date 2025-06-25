@@ -4,6 +4,7 @@ from flask import Flask, request, redirect, session, jsonify
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from google.oauth2 import id_token
 import os, json, pickle
 from pathlib import Path
 import threading
@@ -107,6 +108,10 @@ def google_callback():
         
         # Save credentials
         creds = flow.credentials
+
+        gmail = build("gmail", "v1", credentials=creds)
+        unique_id = gmail.users().getProfile(userId="me").execute()["emailAddress"] 
+
         _save_creds(user_id, creds)
         
         # Clear session
