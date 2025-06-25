@@ -85,12 +85,12 @@ def google_callback():
             return "Missing flow data", 400
         
         # Recreate flow
-        flow = Flow.from_client_config(
-            flow_data['client_config'],
-            scopes=flow_data['scopes'],
-            state=session['oauth_state']
+        flow = Flow.from_client_secrets_file(
+            CLIENT_SECRETS,
+            scopes=SCOPES,
+            state=session["oauth_state"],
         )
-        flow.redirect_uri = flow_data['redirect_uri']
+        flow.redirect_uri = REDIRECT_URI
         
         # Fetch token
         authorization_response = request.url
