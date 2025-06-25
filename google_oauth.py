@@ -20,7 +20,13 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 mcp = FastMCP("Demo")
 
 CLIENT_SECRETS = "credentials.json"
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/drive.metadata.readonly",
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/calendar",
+]
 REDIRECT_URI = os.environ.get('REDIRECT_URI', 'https://testremotemcpserver.onrender.com/google/oauth2callback')
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
