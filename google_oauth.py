@@ -16,7 +16,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-pr
 # Initialize FastMCP
 mcp = FastMCP("Demo")
 
-CLIENT_SECRETS = "client_secret.json"
+CLIENT_SECRETS = "credentials.json"
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 REDIRECT_URI = os.environ.get('REDIRECT_URI', 'https://testremotemcpserver.onrender.com/google/oauth2callback')
 
@@ -41,6 +41,7 @@ def _load_creds(user_id: str) -> Credentials | None:
 @app.route("/google/auth")
 def start_google_auth():
     user_id = request.args.get('user_id', 'default_user')
+    print("user_id", user_id)
     
     try:
         flow = Flow.from_client_secrets_file(
@@ -55,6 +56,7 @@ def start_google_auth():
         )
 
         print(state)
+        print(auth_url)
         
         # Store flow data in session
         session['oauth_state'] = state
@@ -132,23 +134,6 @@ def index():
         }
     })
 
-def run_mcp_server():
-    """Run the MCP server in a separate thread"""
-    port = int(os.environ.get("PORT", 8000))
-    asyncio.run(
-        mcp.run_sse_async(
-            host="0.0.0.0",
-            port=port + 1,  # Run MCP on a different port
-            log_level="debug"
-        )
-    )
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    
-    # Start MCP server in background thread
-    mcp_thread = threading.Thread(target=run_mcp_server, daemon=True)
-    mcp_thread.start()
-    
+if __name__ == "__main__":    
     # Run Flask app
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=8000, debug=False)

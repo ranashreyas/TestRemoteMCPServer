@@ -1,4 +1,6 @@
-from fastmcp import FastMCP
+# from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
+
 import datetime
 import pytz
 import os
@@ -9,12 +11,12 @@ mcp = FastMCP(
 )
 
 @mcp.tool()
-def google_oauth():
+def google_oauth() -> str:
     """
     Perform Google OAuth to get access to the user's Gmail.
     returns: a link to which you will show to the user, who will then click it and authorize their Google account.
     """
-    return "https://testremotemcpserver.onrender.com/google/auth"
+    return "http://localhost:8000/google/auth?user_id=default_user"
 
 @mcp.tool()
 def current_datetime(timezone: str = "America/New_York") -> str:
@@ -40,13 +42,26 @@ def current_datetime(timezone: str = "America/New_York") -> str:
 
 
 if __name__ == "__main__":
-    # mcp.run()
-    import asyncio
-    port = int(os.environ.get("PORT", 8000))
-    asyncio.run(
-        mcp.run_sse_async(
-            host="0.0.0.0",  # Changed from 127.0.0.1 to allow external connections
-            port=port,
-            log_level="debug"
-        )
-    )
+    mcp.run()
+    # import asyncio
+    # port = int(os.environ.get("PORT", 8000))
+    # asyncio.run(
+    #     mcp.run_sse_async(
+    #         host="0.0.0.0",  # Changed from 127.0.0.1 to allow external connections
+    #         port=port,
+    #         log_level="debug"
+    #     )
+    # )
+
+
+# {
+#   "mcpServers": {
+#     "Current Date and Time": {
+#       "command": "/Users/shreyas/anaconda3/envs/mcp-server/bin/mcp",
+#       "args": [
+#         "run",
+#         "/Users/shreyas/tempDesktop/Programming/TestRemoteMCPServer/server.py"
+#       ]
+#     }
+#   }
+# }
