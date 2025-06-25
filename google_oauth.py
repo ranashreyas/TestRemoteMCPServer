@@ -112,7 +112,7 @@ def google_callback():
         gmail = build("gmail", "v1", credentials=creds)
         unique_id = gmail.users().getProfile(userId="me").execute()["emailAddress"] 
 
-        _save_creds(user_id, creds)
+        _save_creds(unique_id, creds)
         
         # Clear session
         session.pop('oauth_state', None)
