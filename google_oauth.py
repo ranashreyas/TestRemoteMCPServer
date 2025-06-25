@@ -8,10 +8,13 @@ import os, json, pickle
 from pathlib import Path
 import threading
 import asyncio
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Initialize FastMCP
 mcp = FastMCP("Demo")
