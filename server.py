@@ -8,6 +8,13 @@ mcp = FastMCP(
     instructions="When you are asked for the current date or time, call current_datetime() and pass along an optional timezone parameter (defaults to NYC)."
 )
 
+@mcp.tool()
+def google_oauth():
+    """
+    Perform Google OAuth to get access to the user's Gmail.
+    returns: a link to which you will show to the user, who will then click it and authorize their Google account.
+    """
+    return "https://testremotemcpserver.onrender.com/google/auth"
 
 @mcp.tool()
 def current_datetime(timezone: str = "America/New_York") -> str:
@@ -33,6 +40,7 @@ def current_datetime(timezone: str = "America/New_York") -> str:
 
 
 if __name__ == "__main__":
+    # mcp.run()
     import asyncio
     port = int(os.environ.get("PORT", 8000))
     asyncio.run(
