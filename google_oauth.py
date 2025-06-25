@@ -131,6 +131,24 @@ def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy"})
 
+@app.route('/pickles')
+def list_pickle_files():
+    """List all pickle files in the Pickles directory"""
+    try:
+        pickle_files = []
+        if TOKEN_DIR.exists():
+            for file in TOKEN_DIR.iterdir():
+                if file.is_file() and file.suffix == '.pickle':
+                    pickle_files.append(file.name)
+        
+        return jsonify({
+            "pickle_files": pickle_files,
+            "count": len(pickle_files),
+            "directory": str(TOKEN_DIR)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/')
 def index():
     """Root endpoint with basic info"""
@@ -139,7 +157,8 @@ def index():
         "endpoints": {
             "mcp_sse": "/sse",
             "google_auth": "/google/auth?user_id=<user_id>",
-            "health": "/health"
+            "health": "/health",
+            "pickles": "/pickles"
         }
     })
 
