@@ -9,6 +9,7 @@ from pathlib import Path
 import threading
 import asyncio
 from werkzeug.middleware.proxy_fix import ProxyFix
+import hashlib
 
 
 # Initialize Flask app
@@ -47,6 +48,7 @@ def _load_creds(user_id: str) -> Credentials | None:
 @app.route("/google/auth")
 def start_google_auth():
     user_id = request.args.get('user_id', 'default_user')
+    client_code = request.args.get('client_code', 'default_client_code')
     print("user_id", user_id)
     
     try:
@@ -65,6 +67,7 @@ def start_google_auth():
         print(auth_url)
         
         # Store flow data in session
+        session['client_code'] = client_code
         session['oauth_state'] = state
         session['user_id'] = user_id
         session['flow_data'] = {
@@ -105,8 +108,9 @@ def google_callback():
         # Save credentials
         creds = flow.credentials
 
-        gmail = build("gmail", "v1", credentials=creds)
-        unique_id = gmail.users().getProfile(userId="me").execute()["emailAddress"] 
+        # gmail = build("gmail", "v1", credentials=creds)
+        # unique_id = gmail.users().getProfile(userId="me").execute()["emailAddress"] 
+        unique_id = session['client_code']
 
         _save_creds(unique_id, creds)
         
@@ -126,6 +130,76 @@ def google_callback():
         '''
     except Exception as e:
         return f"Error in OAuth callback: {str(e)}", 500
+    
+@app.route('/creds')
+def get_creds():
+    """
+    Get credentials from a pickle file with hash authentication
+    Args:
+        filename: Name of the pickle file (without .pickle extension)
+    Query Parameters:
+        hash: SHA256 hash of the secret value for authentication
+    """
+    try:
+        # Get the hash parameter from query string
+        provided_hash = request.args.get('hash')
+        filename = request.args.get('filename')
+        
+        if not provided_hash:
+            return jsonify({
+                "status": "error",
+                "message": "Hash parameter is required"
+            }), 400
+            
+        if not filename:
+            return jsonify({
+                "status": "error",
+                "message": "Filename parameter is required"
+            }), 400
+        
+        # Get the secret from environment variables
+        env_secret = os.environ.get('ENV_SECRET')
+        if not env_secret:
+            return jsonify({
+                "status": "error",
+                "message": "Server configuration error"
+            }), 500
+        
+        # Compute hash of the environment secret
+        expected_hash = hashlib.sha256(env_secret.encode()).hexdigest()
+        
+        # Compare hashes
+        if provided_hash != expected_hash:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid hash"
+            }), 403
+        
+        # If hashes match, proceed to get credentials
+        creds = _load_creds(filename)
+        if creds:
+            return jsonify({
+                "status": "success",
+                "credentials": {
+                    "token": creds.token,
+                    "refresh_token": creds.refresh_token,
+                    "token_uri": creds.token_uri,
+                    "client_id": creds.client_id,
+                    "client_secret": creds.client_secret,
+                    "scopes": creds.scopes
+                }
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": f"No credentials found for {filename}"
+            }), 404
+    except Exception as e:
+        return jsonify({
+            "status": "error", 
+            "message": str(e)
+        }), 500
+
 
 @app.route('/health')
 def health_check():
