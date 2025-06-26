@@ -1,3 +1,4 @@
+import uuid
 from fastmcp import FastMCP
 # from mcp.server.fastmcp import FastMCP
 
@@ -12,15 +13,25 @@ mcp = FastMCP(
 )
 
 @mcp.tool()
-def google_oauth() -> str:
+def generate_session_uuid() -> str:
     """
-    Perform Google OAuth to get access to the user's Gmail.
-    returns: a link to which you will show to the user, who will then click it and authorize their Google account.
+    Generate a session uuid.
+    returns: a uuid.
     """
-    return "https://testremotemcpserver.onrender.com/google/auth?user_id=default_user&client_code=12345"
+    return str(uuid.uuid4())
 
 @mcp.tool()
-def test_pull_creds() -> str:
+def google_oauth(session_uuid: str) -> str:
+    """
+    Perform Google OAuth to get access to the user's Gmail.
+    It is very important that you remember the session uuid. if you don't remember it exactly, call the tool "generate_session_uuid" as that is the uuid that
+    stores the users credentials, and the user will have to redo the oauth process.
+    returns: a link to which you will show to the user, who will then click it and authorize their Google account.
+    """
+    return f"https://testremotemcpserver.onrender.com/google/auth?user_id=default_user&client_code={session_uuid}"
+
+@mcp.tool()
+def test_pull_creds(session_uuid: str) -> str:
     """
     pull the credentials from the user's Google account.
     returns: the credentials.
@@ -39,13 +50,13 @@ def test_pull_creds() -> str:
         # Make request with hash parameter
         response = requests.get(
             "https://testremotemcpserver.onrender.com/creds",
-            params={"hash": secret_hash, "filename": "12345"}
+            params={"hash": secret_hash, "filename": session_uuid}
         )
         
         if response.status_code == 200:
             return response.json()
         else:
-            return f"Error fetching credentials: {response.status_code} - {response.text}"
+            return f"Error fetching credentials: {response.status_code} - {response.text}. You may have to do google oauth again."
     except Exception as e:
         return f"Error making request: {str(e)}"
 
